@@ -109,6 +109,31 @@ function handleSubmitApproval(data) {
   }
 }
 
+function handleBatchSubmitApproval(data) {
+  const { approvals } = data; // array of { rowIndex, ketQua, nguyenNhan, chiTiet }
+
+  if (!approvals || !approvals.length) {
+    return { success: false, message: 'Không có dữ liệu để đồng bộ' };
+  }
+
+  try {
+    const sh = ss.getSheetByName('data');
+    const ngayPheDuyet = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy');
+
+    approvals.forEach(({ rowIndex, ketQua, nguyenNhan, chiTiet }) => {
+      sh.getRange(rowIndex, SHEET_COL.AI).setValue(ketQua);
+      sh.getRange(rowIndex, SHEET_COL.AJ).setValue(nguyenNhan || '');
+      sh.getRange(rowIndex, SHEET_COL.AK).setValue(chiTiet || '');
+      sh.getRange(rowIndex, 34).setValue(ngayPheDuyet); // AH: ngày phê duyệt
+    });
+
+    return { success: true, message: `Đã đồng bộ ${approvals.length} biên bản thành công` };
+  } catch (err) {
+    Logger.log('batchSubmitApproval error: ' + err);
+    return { success: false, message: 'Lỗi khi đồng bộ: ' + err.toString() };
+  }
+}
+
 function handleGetDashboard(data) {
   const sh = ss.getSheetByName('data');
   const rows = sh.getDataRange().getValues();

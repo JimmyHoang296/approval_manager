@@ -1,4 +1,4 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxy4gg8LVAkcVKUm-HE8oa_nTJZVf5rjxL93lLxq7KRgzVCssLJVJzXxdIR2MRcejEo/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyGD2KmooPxuduOGa_PcD5ECuNLVjqmjKbxH3GBuKh4IEF2af5ct55KE9utwJ4t7_zL/exec";
 
 async function callAPI(type, data) {
   const res = await fetch(GAS_URL, {
@@ -22,3 +22,6 @@ export const submitApproval = (rowIndex, ketQua, nguyenNhan, chiTiet) =>
 
 export const getDashboard = () =>
   callAPI('getDashboard', {});
+
+export const batchSubmitApproval = (approvals) =>
+  callAPI('batchSubmitApproval', { approvals });

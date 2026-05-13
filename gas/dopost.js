@@ -9,7 +9,8 @@ function doPost(e) {
     case 'login':           result = handleLogin(bodyJSON.data); break;
     case 'getApprovalData': result = handleGetApprovalData(bodyJSON.data); break;
     case 'submitApproval':  result = handleSubmitApproval(bodyJSON.data); break;
-    case 'getDashboard':    result = handleGetDashboard(bodyJSON.data); break;
+    case 'getDashboard':         result = handleGetDashboard(bodyJSON.data); break;
+    case 'batchSubmitApproval': result = handleBatchSubmitApproval(bodyJSON.data); break;
     default: result = { success: false, message: 'Invalid request type' };
   }
 
