@@ -10,32 +10,17 @@ const REASONS = [
   'Sai mức xử lý/nhóm rank',
 ];
 
-function SectionTitle({ children, color = 'var(--primary)' }) {
+// Small label + value pair
+function KV({ label, value, mono, red }) {
   return (
-    <div style={{
-      fontSize: 11, fontWeight: 700, color: 'var(--gray-500)',
-      textTransform: 'uppercase', letterSpacing: '.07em',
-      marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6,
-    }}>
-      <div style={{ width: 3, height: 11, background: color, borderRadius: 2, flexShrink: 0 }} />
-      {children}
-    </div>
-  );
-}
-
-// A single label + value pair
-function Field({ label, value, span = 1, large, mono }) {
-  return (
-    <div style={{ gridColumn: `span ${span}` }}>
-      <div style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 500, marginBottom: 3 }}>
+    <div>
+      <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>
         {label}
       </div>
       <div style={{
-        fontSize: large ? 14 : 13,
-        fontWeight: large ? 600 : 400,
-        color: 'var(--gray-800)',
+        fontSize: 13, fontWeight: mono ? 600 : 400,
+        color: red ? '#dc2626' : '#1f2937',
         fontFamily: mono ? 'monospace' : undefined,
-        lineHeight: 1.5,
       }}>
         {value || '—'}
       </div>
@@ -43,21 +28,21 @@ function Field({ label, value, span = 1, large, mono }) {
   );
 }
 
-// Highlighted text block (violation content, lỗi, hình thức)
-function HighlightBlock({ label, value, accentColor, bgColor }) {
+// Colored highlight block for violation details
+function VBlock({ label, value, borderColor, bg }) {
   if (!value) return null;
   return (
     <div style={{
-      borderLeft: `3px solid ${accentColor}`,
-      background: bgColor,
+      borderLeft: `3px solid ${borderColor}`,
+      background: bg,
       borderRadius: '0 6px 6px 0',
-      padding: '10px 14px',
-      marginBottom: 8,
+      padding: '8px 10px',
+      marginBottom: 6,
     }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: borderColor, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>
         {label}
       </div>
-      <div style={{ fontSize: 13, color: 'var(--gray-800)', lineHeight: 1.65 }}>
+      <div style={{ fontSize: 12, color: '#1f2937', lineHeight: 1.6 }}>
         {value}
       </div>
     </div>
@@ -87,13 +72,6 @@ export default function ApprovalModal({
     setError('');
   }, [currentIdx]);
 
-  const changeKetQua = (val) => {
-    setKetQua(val);
-    if (val === 'Đồng ý') { setNguyenNhan(''); setChiTiet(''); }
-    setHasChanges(true);
-    setError('');
-  };
-
   const doSave = () => {
     onSaveLocal(
       record._rowIndex, ketQua,
@@ -117,13 +95,9 @@ export default function ApprovalModal({
     navFn();
   };
 
-  // Keyboard navigation ← →
+  // Keyboard ← →
   const navRef = useRef({});
-  navRef.current = {
-    prev: () => navigate(onPrev),
-    next: () => navigate(onNext),
-    close: onClose,
-  };
+  navRef.current = { prev: () => navigate(onPrev), next: () => navigate(onNext), close: onClose };
   useEffect(() => {
     const onKey = (e) => {
       const tag = document.activeElement?.tagName;
@@ -142,49 +116,58 @@ export default function ApprovalModal({
   const position = currentIdx + 1;
 
   const fmtDate = (v) => {
-    if (!v) return '—';
-    if (v instanceof Date) return v.toLocaleDateString('vi-VN');
+    if (!v) return null;
     const d = new Date(v);
     return isNaN(d) ? String(v) : d.toLocaleDateString('vi-VN');
   };
   const fmtMoney = (v) =>
-    v && !isNaN(Number(v)) ? Number(v).toLocaleString('vi-VN') + ' đ' : (v || '—');
+    v && !isNaN(Number(v)) ? Number(v).toLocaleString('vi-VN') + ' đ' : (v || null);
 
-  const statusBadge =
+  const status =
     !record.ketQua             ? { bg: '#fef3c7', fg: '#92400e', label: 'Chưa xử lý' } :
     record.ketQua === 'Đồng ý' ? { bg: '#def7ec', fg: '#057a55', label: 'Đồng ý'     } :
                                   { bg: '#fde8e8', fg: '#c81e1e', label: 'Không đồng ý'};
 
+  const S = { // shared inline style tokens
+    sectionLabel: {
+      fontSize: 10, fontWeight: 700, color: '#6b7280',
+      textTransform: 'uppercase', letterSpacing: '.07em',
+      marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5,
+    },
+    divLine: (color) => ({ width: 3, height: 10, background: color, borderRadius: 2, flexShrink: 0 }),
+    card: {
+      background: '#f9fafb', border: '1px solid #e5e7eb',
+      borderRadius: 7, padding: '10px 12px',
+    },
+  };
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 740 }}>
+      <div className="modal">
 
         {/* ── Header ── */}
-        <div className="modal-header" style={{ padding: '14px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>
-              BB #{record.maViPham}
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>
+              BB&nbsp;#{record.maViPham}
             </span>
-            <span style={{
-              padding: '2px 9px', borderRadius: 10, fontSize: 12, fontWeight: 600,
-              background: statusBadge.bg, color: statusBadge.fg,
-            }}>
-              {statusBadge.label}
+            <span style={{ padding: '1px 8px', borderRadius: 9, fontSize: 11, fontWeight: 600, background: status.bg, color: status.fg }}>
+              {status.label}
             </span>
             {hasChanges && <span style={{ fontSize: 11, color: '#d97706', fontWeight: 600 }}>● chưa lưu</span>}
             {savedFlash  && <span style={{ fontSize: 11, color: '#057a55', fontWeight: 600 }}>✓ Đã lưu</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>{position} / {total}</span>
+            <span style={{ fontSize: 12, color: '#9ca3af' }}>{position}&nbsp;/&nbsp;{total}</span>
             <button className="modal-close" onClick={onClose}>×</button>
           </div>
         </div>
 
-        {/* ── Navigation bar ── */}
+        {/* ── Nav bar ── */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '8px 20px', borderBottom: '1px solid var(--gray-200)',
-          background: 'var(--gray-50)',
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '7px 18px', borderBottom: '1px solid #e5e7eb',
+          background: '#f9fafb', flexShrink: 0,
         }}>
           <button className="btn btn-outline btn-sm" onClick={() => navigate(onPrev)} disabled={currentIdx === 0} title="Phím ←">
             ← Trước
@@ -195,149 +178,157 @@ export default function ApprovalModal({
           <button
             className="btn btn-sm"
             style={{
-              background: hasMoreUnreviewed ? '#fef3c7' : 'var(--gray-100)',
-              color:       hasMoreUnreviewed ? '#92400e' : 'var(--gray-400)',
-              border:      `1px solid ${hasMoreUnreviewed ? '#fbbf24' : 'var(--gray-200)'}`,
+              background: hasMoreUnreviewed ? '#fef3c7' : '#f3f4f6',
+              color:       hasMoreUnreviewed ? '#92400e' : '#9ca3af',
+              border:      `1px solid ${hasMoreUnreviewed ? '#fbbf24' : '#e5e7eb'}`,
             }}
             onClick={() => navigate(onNextUnreviewed)}
             disabled={!hasMoreUnreviewed}
           >
             ⚡ Chưa duyệt tiếp
           </button>
-          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--gray-400)' }}>← → phím điều hướng</span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af' }}>← → phím điều hướng</span>
         </div>
 
-        {/* ── Body ── */}
-        <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* ── Body (scrolls internally) ── */}
+        <div className="modal-body">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-          {/* Block 1 — Nhân viên */}
-          <div style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '14px 16px' }}>
-            <SectionTitle>Nhân viên</SectionTitle>
-            {/* Name row */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+            {/* ── Row 1: Nhân viên ── */}
+            <div style={S.card}>
+              <div style={S.sectionLabel}>
+                <div style={S.divLine('#1a56db')} />
+                Nhân viên
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                {/* Name + title + dept */}
+                <div style={{ flex: '1 1 0', minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#111827', lineHeight: 1.3 }}>
+                    {record.tenNV || '—'}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>
+                    {[record.chucDanh, record.phongBan].filter(Boolean).join('  ·  ') || '—'}
+                  </div>
+                </div>
+                {/* Identifiers */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, auto)', gap: '4px 16px', flexShrink: 0 }}>
+                  <KV label="Mã vi phạm"   value={record.maViPham}  mono />
+                  <KV label="Mã vụ việc"   value={record.maVuViec}  mono />
+                  <KV label="Mã nhân viên" value={record.maNV}      mono />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Row 2: Vi phạm — 2 cột ── */}
+            <div>
+              <div style={S.sectionLabel}>
+                <div style={S.divLine('#2563eb')} />
+                Nội dung vi phạm
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '55% 45%', gap: 8 }}>
+                {/* Cột trái: nội dung + thời điểm */}
+                <div>
+                  <VBlock label="Nội dung vi phạm"   value={record.noiDung}           borderColor="#2563eb" bg="#eff6ff" />
+                  <VBlock label="Thời điểm vi phạm"  value={fmtDate(record.thoiDiemVP)} borderColor="#7c3aed" bg="#f5f3ff" />
+                </div>
+                {/* Cột phải: lỗi + hình thức */}
+                <div>
+                  <VBlock label="Lỗi vi phạm"       value={record.loiViPham}          borderColor="#d97706" bg="#fffbeb" />
+                  <VBlock label="Hình thức xử lý"   value={record.hinhThuc}            borderColor="#059669" bg="#ecfdf5" />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Row 3: Xử lý (horizontal strip) ── */}
+            <div style={{ ...S.card, display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', gap: '0 20px', alignItems: 'center' }}>
+              {/* Tiền phạt — prominent */}
               <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--gray-900)', lineHeight: 1.3 }}>
-                  {record.tenNV || '—'}
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>
+                  Số tiền phạt
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--gray-500)', marginTop: 3 }}>
-                  {[record.chucDanh, record.phongBan].filter(Boolean).join('  ·  ')}
-                </div>
-              </div>
-            </div>
-            {/* Identifiers */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px 16px' }}>
-              <Field label="Mã vi phạm"   value={record.maViPham}  large mono />
-              <Field label="Mã vụ việc"   value={record.maVuViec}  mono />
-              <Field label="Mã nhân viên" value={record.maNV}      mono />
-            </div>
-          </div>
-
-          {/* Block 2 — Nội dung vi phạm */}
-          <div>
-            <SectionTitle color="#2563eb">Nội dung vi phạm</SectionTitle>
-            <HighlightBlock
-              label="Nội dung vi phạm"
-              value={record.noiDung}
-              accentColor="#2563eb"
-              bgColor="#eff6ff"
-            />
-            <HighlightBlock
-              label="Thời điểm vi phạm"
-              value={fmtDate(record.thoiDiemVP)}
-              accentColor="#6366f1"
-              bgColor="#eef2ff"
-            />
-            <HighlightBlock
-              label="Lỗi vi phạm"
-              value={record.loiViPham}
-              accentColor="#d97706"
-              bgColor="#fffbeb"
-            />
-            <HighlightBlock
-              label="Hình thức xử lý"
-              value={record.hinhThuc}
-              accentColor="#059669"
-              bgColor="#ecfdf5"
-            />
-          </div>
-
-          {/* Block 3 — Xử lý tài chính & hành chính */}
-          <div style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '14px 16px' }}>
-            <SectionTitle color="#dc2626">Xử lý</SectionTitle>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px 20px' }}>
-              <div>
-                <div style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 500, marginBottom: 3 }}>Số tiền phạt</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: record.soTienPhat ? '#dc2626' : 'var(--gray-400)' }}>
-                  {record.soTienPhat ? fmtMoney(record.soTienPhat) : '—'}
+                <div style={{ fontSize: 20, fontWeight: 800, color: record.soTienPhat ? '#dc2626' : '#d1d5db', lineHeight: 1 }}>
+                  {fmtMoney(record.soTienPhat) || '—'}
                 </div>
               </div>
-              <Field label="Ngày duyệt"            value={fmtDate(record.ngayDuyet)} />
-              <Field label="Đơn vị phát sinh BBVP" value={record.donViPhatSinh} />
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div style={{ height: 1, background: 'var(--gray-200)' }} />
-
-          {/* Block 4 — Phê duyệt */}
-          <div>
-            <SectionTitle>Kết quả phê duyệt</SectionTitle>
-            <div className="radio-group" style={{ marginBottom: 0 }}>
-              <label className="radio-option approve" style={{ padding: '12px 20px', fontSize: 15 }}>
-                <input type="radio" name="ketQua" value="Đồng ý"
-                  checked={ketQua === 'Đồng ý'} onChange={() => changeKetQua('Đồng ý')} />
-                <span>✓ Đồng ý</span>
-              </label>
-              <label className="radio-option reject" style={{ padding: '12px 20px', fontSize: 15 }}>
-                <input type="radio" name="ketQua" value="Không đồng ý"
-                  checked={ketQua === 'Không đồng ý'} onChange={() => changeKetQua('Không đồng ý')} />
-                <span>✗ Không đồng ý</span>
-              </label>
+              <KV label="Ngày duyệt"            value={fmtDate(record.ngayDuyet)} />
+              <KV label="Đơn vị phát sinh BBVP" value={record.donViPhatSinh} />
             </div>
 
-            {ketQua === 'Không đồng ý' && (
-              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">
-                    Nguyên nhân không phê duyệt
-                    <span style={{ color: 'var(--gray-400)', fontWeight: 400, marginLeft: 4, fontSize: 12 }}>(cột AJ)</span>
-                  </label>
-                  <select className="form-control" value={nguyenNhan}
-                    onChange={e => { setNguyenNhan(e.target.value); setHasChanges(true); }}>
-                    <option value="">-- Chọn nguyên nhân --</option>
-                    {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">
-                    Chi tiết / Nội dung chỉnh sửa
-                    <span style={{ color: 'var(--gray-400)', fontWeight: 400, marginLeft: 4, fontSize: 12 }}>(cột AK)</span>
-                  </label>
-                  <textarea className="form-control" rows={3} value={chiTiet}
-                    onChange={e => { setChiTiet(e.target.value); setHasChanges(true); }}
-                    placeholder="Nhập chi tiết nguyên nhân hoặc nội dung vi phạm cần chỉnh sửa..." />
-                </div>
+            {/* ── Divider ── */}
+            <div style={{ height: 1, background: '#e5e7eb' }} />
+
+            {/* ── Row 4: Phê duyệt ── */}
+            <div>
+              <div style={S.sectionLabel}>
+                <div style={S.divLine('#374151')} />
+                Kết quả phê duyệt
               </div>
-            )}
 
-            {error && <div className="alert alert-error" style={{ marginTop: 12, marginBottom: 0 }}>{error}</div>}
+              <div className="radio-group">
+                <label className="radio-option approve" style={{ padding: '10px 18px', fontSize: 14 }}>
+                  <input type="radio" name="ketQua" value="Đồng ý"
+                    checked={ketQua === 'Đồng ý'}
+                    onChange={() => { setKetQua('Đồng ý'); setNguyenNhan(''); setChiTiet(''); setHasChanges(true); setError(''); }} />
+                  <span>✓ Đồng ý</span>
+                </label>
+                <label className="radio-option reject" style={{ padding: '10px 18px', fontSize: 14 }}>
+                  <input type="radio" name="ketQua" value="Không đồng ý"
+                    checked={ketQua === 'Không đồng ý'}
+                    onChange={() => { setKetQua('Không đồng ý'); setHasChanges(true); setError(''); }} />
+                  <span>✗ Không đồng ý</span>
+                </label>
+              </div>
+
+              {ketQua === 'Không đồng ý' && (
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontSize: 12 }}>
+                      Nguyên nhân không phê duyệt
+                      <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 4 }}>(cột AJ)</span>
+                    </label>
+                    <select className="form-control" style={{ fontSize: 13 }} value={nguyenNhan}
+                      onChange={e => { setNguyenNhan(e.target.value); setHasChanges(true); }}>
+                      <option value="">-- Chọn nguyên nhân --</option>
+                      {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontSize: 12 }}>
+                      Chi tiết / Nội dung chỉnh sửa
+                      <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 4 }}>(cột AK)</span>
+                    </label>
+                    <textarea className="form-control" style={{ fontSize: 13 }} rows={3} value={chiTiet}
+                      onChange={e => { setChiTiet(e.target.value); setHasChanges(true); }}
+                      placeholder="Nhập chi tiết nguyên nhân hoặc nội dung vi phạm cần chỉnh sửa..." />
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="alert alert-error" style={{ marginTop: 8, marginBottom: 0, fontSize: 12, padding: '7px 12px' }}>
+                  {error}
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
 
         {/* ── Footer ── */}
         <div className="modal-footer">
-          <span style={{ fontSize: 12, color: 'var(--gray-400)', marginRight: 'auto' }}>
+          <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 'auto' }}>
             Lưu cục bộ → dùng "Đồng bộ phê duyệt" để ghi lên sheet
           </span>
-          <button className="btn btn-outline" onClick={onClose}>Đóng</button>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>Đóng</button>
           <button
-            className={`btn ${ketQua === 'Đồng ý' ? 'btn-success' : ketQua === 'Không đồng ý' ? 'btn-danger' : 'btn-primary'}`}
+            className={`btn btn-sm ${ketQua === 'Đồng ý' ? 'btn-success' : ketQua === 'Không đồng ý' ? 'btn-danger' : 'btn-primary'}`}
             onClick={handleSave}
             disabled={!ketQua || !hasChanges}
           >
             {savedFlash ? '✓ Đã lưu' : '💾 Lưu cục bộ'}
           </button>
         </div>
+
       </div>
     </div>
   );
