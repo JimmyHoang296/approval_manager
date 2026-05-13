@@ -226,22 +226,23 @@ tbody tr:last-child td { border-bottom: none; }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.5);
+  background: rgba(0,0,0,.55);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 50px 20px 40px;
+  overflow-y: auto;
 }
 .modal {
   background: white;
   border-radius: 12px;
   width: 100%;
   max-width: 640px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  /* no max-height — overflow-y on overlay handles scrolling */
 }
+.modal-section { margin-bottom: 18px; }
 .modal-header {
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--gray-200);
