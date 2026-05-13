@@ -16,6 +16,8 @@ var DATA_COL = {
   SO_TIEN_PHAT: 16,
   NGUOI_LAP: 21,
   NGAY_LAP: 19,
+  NGAY_DUYET: 22,         // Ngày duyệt (col W)
+  DON_VI_PHAT_SINH: 29,   // Đơn vị phát sinh BBVP (col AD)
   TRANG_THAI: 27,
   BOI_THUONG: 18,
   AF: 31, // Thanh tra thẩm định/ phê duyệt (assignee name)
@@ -70,7 +72,9 @@ function handleGetApprovalData(data) {
         soTienPhat: row[DATA_COL.SO_TIEN_PHAT],
         boiThuong: row[DATA_COL.BOI_THUONG],
         ngayLap: row[DATA_COL.NGAY_LAP],
+        ngayDuyet: row[DATA_COL.NGAY_DUYET],
         nguoiLap: row[DATA_COL.NGUOI_LAP],
+        donViPhatSinh: row[DATA_COL.DON_VI_PHAT_SINH],
         trangThai: row[DATA_COL.TRANG_THAI],
         thanhTraPhuTrach: row[DATA_COL.AF],
         giamDoc: row[DATA_COL.AG],
